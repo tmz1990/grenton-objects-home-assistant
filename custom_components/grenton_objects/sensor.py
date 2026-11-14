@@ -8,6 +8,7 @@ Repository: https://github.com/jnalepka/grenton-objects-home-assistant
 """
 
 import aiohttp
+from .gate import gate_session
 from .const import (
     CONF_API_ENDPOINT,
     CONF_GRENTON_ID,
@@ -210,7 +211,7 @@ class GrentonSensor(SensorEntity):
             else:
                 command = {"status": f"return {self._grenton_id.split('->')[0]}:execute(0, 'getVar(\"{self._grenton_id.split('->')[1]}\")')"}
             
-            async with aiohttp.ClientSession() as session:
+            async with gate_session() as session:
                 async with session.get(f"{self._api_endpoint}", json=command) as response:
                     response.raise_for_status()
                     data = await response.json()

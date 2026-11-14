@@ -8,6 +8,7 @@ Repository: https://github.com/jnalepka/grenton-objects-home-assistant
 """
 
 import aiohttp
+from .gate import gate_session
 from .const import (
     CONF_API_ENDPOINT,
     CONF_GRENTON_ID,
@@ -289,7 +290,7 @@ class GrentonLight(LightEntity):
             self._last_command_time = self.hass.loop.time() if self.hass is not None else None
             self.async_write_ha_state()
             
-            async with aiohttp.ClientSession() as session:
+            async with gate_session() as session:
                 async with session.post(f"{self._api_endpoint}", json=command) as response:
                     response.raise_for_status()
         except aiohttp.ClientError as ex:
@@ -325,7 +326,7 @@ class GrentonLight(LightEntity):
             self._last_command_time = self.hass.loop.time() if self.hass is not None else None
             self.async_write_ha_state()
             
-            async with aiohttp.ClientSession() as session:
+            async with gate_session() as session:
                 async with session.post(f"{self._api_endpoint}", json=command) as response:
                     response.raise_for_status()
         except aiohttp.ClientError as ex:
@@ -364,7 +365,7 @@ class GrentonLight(LightEntity):
             if self._grenton_type == CONF_GRENTON_TYPE_RGBW:
                 command.update(self._generate_get_command("status_3", grenton_id_part_0, grenton_id_part_1, "get", 15))
             
-            async with aiohttp.ClientSession() as session:
+            async with gate_session() as session:
                 async with session.get(f"{self._api_endpoint}", json=command) as response:
                     response.raise_for_status()
                     data = await response.json()

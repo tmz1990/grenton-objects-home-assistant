@@ -8,6 +8,7 @@ Repository: https://github.com/jnalepka/grenton-objects-home-assistant
 """
 
 import aiohttp
+from .gate import gate_session
 import logging
 import voluptuous as vol
 from homeassistant.components.button import ButtonEntity
@@ -61,7 +62,7 @@ class GrentonScript(ButtonEntity):
                 command = {
                     "command": f"{self._grenton_id}(nil)"
                 }
-            async with aiohttp.ClientSession() as session:
+            async with gate_session() as session:
                 async with session.post(self._api_endpoint, json=command) as response:
                     response.raise_for_status()
                     _LOGGER.info(f"Script {self._object_name} executed successfully (Grenton).")
