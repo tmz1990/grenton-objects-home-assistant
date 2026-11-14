@@ -126,6 +126,8 @@
     },
     "device_class": {
       "options": {
+        "percent": "Percent (%, no device class)",
+        "text": "Text (e.g. a string user feature)",
         "apparent_power": "Apparent Power (VA)",
         "atmospheric_pressure": "Atmospheric Pressure (cbar, bar, hPa, mmHg, inHg, kPa, mbar, Pa, psi)",
         "battery": "Battery (%)",

@@ -109,6 +109,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     device_class = config_entry.data.get(CONF_DEVICE_CLASS)
     unit_of_measurement = DEFAULT_UNITS.get(device_class, None)
     state_class = config_entry.data.get(CONF_STATE_CLASS)
+    # Local patch (not upstream): pseudo device classes without an HA class.
+    if device_class == "percent":
+        device_class, unit_of_measurement = None, "%"
+    elif device_class == "text":
+        device_class, unit_of_measurement, state_class = None, None, None
     auto_update = config_entry.options.get(CONF_AUTO_UPDATE, config_entry.data.get(CONF_AUTO_UPDATE, True))
     update_interval = config_entry.options.get(CONF_UPDATE_INTERVAL, config_entry.data.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL))
     

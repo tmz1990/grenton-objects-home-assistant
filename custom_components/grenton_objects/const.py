@@ -48,6 +48,10 @@ DEVICE_TYPE_OPTIONS = [
 ]
 
 DEVICE_CLASS_OPTIONS = [
+    # Local patch (not upstream): plain sensors without an HA device class.
+    # "percent" = number in %, "text" = string value (e.g. a user feature).
+    "percent",
+    "text",
     "apparent_power",
     "atmospheric_pressure",
     "battery",
