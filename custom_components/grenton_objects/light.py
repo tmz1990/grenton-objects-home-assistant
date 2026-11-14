@@ -22,6 +22,7 @@ from .const import (
     CONF_GRENTON_TYPE_LED_G,
     CONF_GRENTON_TYPE_LED_B,
     CONF_GRENTON_TYPE_LED_W,
+    CONF_GRENTON_TYPE_LED_MONO,
     CONF_AUTO_UPDATE,
     CONF_UPDATE_INTERVAL, 
     DEFAULT_UPDATE_INTERVAL,
@@ -40,6 +41,7 @@ from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.util import color as color_util
 from datetime import timedelta
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers import entity_registry as er
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +61,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     update_interval = config_entry.options.get(CONF_UPDATE_INTERVAL, config_entry.data.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL))
     
     entity = GrentonLight(api_endpoint, grenton_id, grenton_type, object_name, auto_update, update_interval)
+
+    # Lokalna poprawka: zmiana typu na LED_MONO zmienia unique_id, więc przepinamy
+    # istniejący wpis rejestru, żeby encja zachowała swoje entity_id.
+    if grenton_type == CONF_GRENTON_TYPE_LED_MONO:
+        registry = er.async_get(hass)
+        for reg_entry in er.async_entries_for_config_entry(registry, config_entry.entry_id):
+            if reg_entry.domain == "light" and reg_entry.unique_id != entity.unique_id:
+                registry.async_update_entity(reg_entry.entity_id, new_unique_id=entity.unique_id)
     async_add_entities([entity], True)
 
     if DOMAIN not in hass.data:
@@ -133,7 +143,7 @@ class GrentonLight(LightEntity):
             else:
                 self._brightness = brightness * 255
                 self._last_brightness = brightness * 255
-        elif self._grenton_type == CONF_GRENTON_TYPE_LED_R or self._grenton_type == CONF_GRENTON_TYPE_LED_G or self._grenton_type == CONF_GRENTON_TYPE_LED_B or self._grenton_type == CONF_GRENTON_TYPE_LED_W:
+        elif self._grenton_type in LIGHT_GRENTON_TYPE_LED:
             self._brightness = brightness
             self._last_brightness = brightness
         self.async_write_ha_state()
@@ -226,6 +236,7 @@ class GrentonLight(LightEntity):
                 CONF_GRENTON_TYPE_LED_G: {"action": "execute", "index": 4, "param": brightness},
                 CONF_GRENTON_TYPE_LED_B: {"action": "execute", "index": 5, "param": brightness},
                 CONF_GRENTON_TYPE_LED_W: {"action": "execute", "index": 12, "param": brightness},
+                CONF_GRENTON_TYPE_LED_MONO: {"action": "execute", "index": 0, "param": brightness},
             }
             white = kwargs.get("white")
 
@@ -307,6 +318,7 @@ class GrentonLight(LightEntity):
                 CONF_GRENTON_TYPE_LED_G: {"action": "execute", "index": 4},
                 CONF_GRENTON_TYPE_LED_B: {"action": "execute", "index": 5},
                 CONF_GRENTON_TYPE_LED_W: {"action": "execute", "index": 12},
+                CONF_GRENTON_TYPE_LED_MONO: {"action": "execute", "index": 0},
             }
             
             if self._grenton_type == CONF_GRENTON_TYPE_DIMMER and grenton_id_part_1.startswith("ZWA"):
@@ -349,6 +361,7 @@ class GrentonLight(LightEntity):
                 CONF_GRENTON_TYPE_LED_G: 4,
                 CONF_GRENTON_TYPE_LED_B: 5,
                 CONF_GRENTON_TYPE_LED_W: 15,
+                CONF_GRENTON_TYPE_LED_MONO: 0,
             }
             
             if self._grenton_type in xml_index__mapping:
@@ -377,7 +390,7 @@ class GrentonLight(LightEntity):
                         else:
                             self._brightness = data.get("status") * 255
                             self._last_brightness = data.get("status") * 255
-                    elif self._grenton_type == CONF_GRENTON_TYPE_LED_R or self._grenton_type == CONF_GRENTON_TYPE_LED_G or self._grenton_type == CONF_GRENTON_TYPE_LED_B or self._grenton_type == CONF_GRENTON_TYPE_LED_W:
+                    elif self._grenton_type in LIGHT_GRENTON_TYPE_LED:
                         self._brightness = data.get("status")
                         self._last_brightness = data.get("status")
                     
